@@ -2,8 +2,33 @@
 <html lang="pt-br" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MedTrack v2 — Medicação Inteligente</title>
+
+<!-- ═══ PWA — Manifest & Theme ═══ -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3b82f6" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)">
+<meta name="description" content="Sistema inteligente de controle de medicação familiar com alertas, estoque e histórico.">
+
+<!-- ═══ PWA — iOS / Safari ═══ -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MedTrack">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-startup-image" href="icons/icon-512.png">
+
+<!-- ═══ PWA — Android / Windows ═══ -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="MedTrack">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+
+<!-- ═══ Open Graph (compartilhamento) ═══ -->
+<meta property="og:title" content="MedTrack — Medicação Inteligente">
+<meta property="og:description" content="Sistema de medicação familiar com alertas e histórico.">
+<meta property="og:type" content="website">
+
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
@@ -71,7 +96,7 @@
 ═══════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--f);background:var(--bg);color:var(--t1);min-height:100vh;overflow-x:hidden;transition:background var(--t),color var(--t)}
+body{font-family:var(--f);background:var(--bg);color:var(--t1);min-height:100vh;min-height:100dvh;overflow-x:hidden;transition:background var(--t),color var(--t);padding-bottom:env(safe-area-inset-bottom)}
 button{font-family:var(--f);cursor:pointer}
 input,select,textarea{font-family:var(--f)}
 ::selection{background:var(--a);color:#fff}
@@ -628,6 +653,38 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
   .tab{padding:0 11px;font-size:.75rem}
   .mc-actions{flex-direction:column;gap:4px}
 }
+
+/* ═══════════════════════════════════
+   PWA — INSTALL BANNER
+═══════════════════════════════════ */
+#pwa-banner{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:8000;
+  background:var(--surf);border-top:1px solid var(--bdr2);
+  padding:14px 18px calc(14px + env(safe-area-inset-bottom));
+  box-shadow:0 -4px 24px rgba(0,0,0,.35);
+  animation:slideUp .35s var(--ease);
+}
+#pwa-banner.show{display:flex;align-items:center;gap:12px}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+.pwa-banner-ico{font-size:2rem;flex-shrink:0}
+.pwa-banner-txt{flex:1}
+.pwa-banner-title{font-size:.9rem;font-weight:800;color:var(--t1)}
+.pwa-banner-sub{font-size:.75rem;color:var(--t2);margin-top:2px}
+.pwa-banner-btns{display:flex;gap:8px;flex-shrink:0}
+
+/* ═══════════════════════════════════
+   PWA — OFFLINE BAR
+═══════════════════════════════════ */
+#offline-bar{
+  display:none;
+  position:fixed;top:60px;left:0;right:0;z-index:7000;
+  background:rgba(245,158,11,.15);border-bottom:1px solid var(--w);
+  padding:7px 18px;text-align:center;
+  font-size:.78rem;color:var(--w);font-weight:600;
+  backdrop-filter:blur(8px);
+}
+#offline-bar.show{display:block}
 </style>
 </head>
 <body>
@@ -668,10 +725,7 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
       </div>
 
       <div class="hdr-right">
-        <div class="sync-pill">
-          <div class="sync-dot" id="syncDot"></div>
-          <span id="syncStatus">offline</span>
-        </div>
+
         <button class="ic-btn" onclick="toggleTheme()" title="Tema">
           <span id="themeIco">☀️</span>
         </button>
@@ -771,7 +825,7 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
             <div class="prog-row"><span class="prog-lbl">Tratamento</span><span class="prog-pct" id="progPct">0%</span></div>
             <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
             <div style="font-size:.72rem;color:var(--t3);line-height:1.55">
-              Sincronizado com Google Sheets em tempo real.
+              Dados salvos localmente no dispositivo.
             </div>
           </div>
         </div>
@@ -781,7 +835,7 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
       <div class="panel">
         <div class="ph">
           <div class="pt"><div class="pi">📋</div>Medicações — <span id="listPatientName" style="color:var(--a)">todos</span></div>
-          <button class="btn btn-s btn-sm" onclick="syncFromSheet()">🔄 Sync</button>
+          <button class="btn btn-s btn-sm" style="visibility:hidden">🔄</button>
         </div>
         <div class="filter-row">
           <button class="fb on" data-f="todos" onclick="setFilter('todos',this)">Todos</button>
@@ -881,9 +935,43 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
       <div class="g3" id="patientGrid">
         <div class="empty" style="grid-column:1/-1"><div class="empty-ico">👥</div><p>Nenhum paciente.<br>Adicione o primeiro perfil.</p></div>
       </div>
+
+      <!-- BACKUP / RESTAURAR -->
+      <div class="panel" style="margin-top:24px;padding:20px">
+        <div class="pt" style="margin-bottom:16px"><div class="pi">💾</div>Backup &amp; Restaurar</div>
+        <p style="font-size:.8rem;color:var(--t3);margin-bottom:16px;line-height:1.6">
+          Exporte todos os dados para um arquivo <strong>.json</strong> e restaure quando precisar.
+          A importação <strong>substitui</strong> todos os dados atuais.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-p btn-sm" onclick="exportarBackup()">⬇️ Exportar JSON</button>
+          <button class="btn btn-s btn-sm" onclick="document.getElementById('importFileInput').click()">⬆️ Importar JSON</button>
+          <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importarBackup(event)">
+        </div>
+      </div>
     </div>
 
   </main>
+</div>
+
+<!-- ════════════════════════════════
+     PWA — OFFLINE BAR
+════════════════════════════════ -->
+<div id="offline-bar">📡 Você está offline — os dados salvos continuam disponíveis</div>
+
+<!-- ════════════════════════════════
+     PWA — INSTALL BANNER
+════════════════════════════════ -->
+<div id="pwa-banner">
+  <div class="pwa-banner-ico">💊</div>
+  <div class="pwa-banner-txt">
+    <div class="pwa-banner-title">Instalar MedTrack</div>
+    <div class="pwa-banner-sub">Adicionar à tela inicial para acesso rápido</div>
+  </div>
+  <div class="pwa-banner-btns">
+    <button class="btn btn-s btn-sm" id="pwa-dismiss">Agora não</button>
+    <button class="btn btn-p btn-sm" id="pwa-install">📲 Instalar</button>
+  </div>
 </div>
 
 <!-- ════════════════════════════════
@@ -1091,7 +1179,7 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
-const API_URL = "https://script.google.com/macros/s/AKfycbxL8YU8i62Y0TFHlo7aAgur3I2UwVJ0VqTMUXdpL2p45gW-JRV9NgS6W0c_N_TR8drueg/exec";
+// Armazenamento local — sem sincronização remota
 
 // ══════════════════════════════════════════════
 // ESTADO
@@ -1126,7 +1214,6 @@ function initApp() {
   startClock();
   checkConnection();
   renderAll();
-  syncFromSheet();
   setInterval(() => { renderAll(); }, 30000);
   // Tema salvo
   const tema = localStorage.getItem("mt_tema") || "dark";
@@ -1161,22 +1248,11 @@ function toggleTheme() {
 // CONEXÃO
 // ══════════════════════════════════════════════
 function checkConnection() {
-  const dot = document.getElementById("syncDot");
-  const lbl = document.getElementById("syncStatus");
-  const upd = () => {
-    dot.className = "sync-dot " + (navigator.onLine ? "on" : "");
-    lbl.textContent = navigator.onLine ? "online" : "offline";
-  };
-  upd();
-  window.addEventListener("online",  () => { upd(); syncFromSheet(); });
-  window.addEventListener("offline", upd);
+  // Modo local — sem sincronização remota
 }
 
 function setSyncing(v) {
-  const dot = document.getElementById("syncDot");
-  const lbl = document.getElementById("syncStatus");
-  if(v){ dot.className="sync-dot sy"; lbl.textContent="sincronizando..."; }
-  else { dot.className="sync-dot " + (navigator.onLine?"on":""); lbl.textContent=navigator.onLine?"online":"offline"; }
+  // Modo local — sem sincronização remota
 }
 
 // ══════════════════════════════════════════════
@@ -1927,50 +2003,63 @@ function stopAlarme() {
 }
 
 // ══════════════════════════════════════════════
-// SYNC SHEETS
+// BACKUP / RESTAURAR
 // ══════════════════════════════════════════════
-async function syncToSheet() {
-  if(!navigator.onLine || API_URL.includes("COLE")) return;
-  setSyncing(true);
-  try {
-    await fetch(API_URL, {
-      method:"POST", mode:"no-cors",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ action:"salvar", payload: {
-        medicacoes: state.medicacoes,
-        estoque:    state.estoque,
-        compras:    state.compras,
-        pacientes:  state.pacientes,
-        historico:  state.historico,
-      }})
-    });
-    toast("Sincronizado com Google Sheets ✓","success");
-  } catch { toast("Erro ao sincronizar","error"); }
-  setSyncing(false);
+function exportarBackup() {
+  const backup = {
+    versao: 1,
+    exportadoEm: new Date().toISOString(),
+    pacientes:  state.pacientes,
+    medicacoes: state.medicacoes,
+    estoque:    state.estoque,
+    compras:    state.compras,
+    historico:  state.historico,
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  const data = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
+  a.href     = url;
+  a.download = `medtrack-backup-${data}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast("Backup exportado com sucesso ✓", "success");
 }
 
-async function syncFromSheet() {
-  if(!navigator.onLine || API_URL.includes("COLE")) return;
-  setSyncing(true);
-  try {
-    const r = await fetch(`${API_URL}?action=carregar`);
-    const d = await r.json();
-    if(d.medicacoes) {
-      // Mescla preservando tomados locais
-      const mapa = {};
-      state.medicacoes.forEach(m => mapa[m.id]=m);
-      d.medicacoes.forEach(m => { if(!mapa[m.id]) mapa[m.id]=m; else if(mapa[m.id].tomado) m.tomado=true; });
-      state.medicacoes = Object.values(mapa);
+function importarBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (!d.pacientes && !d.medicacoes && !d.estoque) {
+        toast("Arquivo inválido ou corrompido", "error");
+        return;
+      }
+      if (!confirm("⚠️ Isso irá substituir TODOS os dados atuais pelo backup. Confirma?")) {
+        event.target.value = "";
+        return;
+      }
+      if (d.pacientes)  state.pacientes  = d.pacientes;
+      if (d.medicacoes) state.medicacoes = d.medicacoes;
+      if (d.estoque)    state.estoque    = d.estoque;
+      if (d.compras)    state.compras    = d.compras;
+      if (d.historico)  state.historico  = d.historico;
+      save();
+      renderAll();
+      toast("Backup restaurado com sucesso ✓", "success");
+    } catch {
+      toast("Erro ao ler o arquivo JSON", "error");
     }
-    if(d.estoque)   state.estoque   = d.estoque;
-    if(d.compras)   state.compras   = d.compras;
-    if(d.pacientes) state.pacientes = d.pacientes;
-    if(d.historico) state.historico = d.historico;
-    save(); renderAll();
-    toast("Dados atualizados do Sheets ✓","info");
-  } catch {}
-  setSyncing(false);
+    event.target.value = "";
+  };
+  reader.readAsText(file);
 }
+
+
+function syncToSheet()   { /* modo local — sem Google Sheets */ }
+function syncFromSheet() { /* modo local — sem Google Sheets */ }
 
 // ══════════════════════════════════════════════
 // MODAL
@@ -2021,6 +2110,81 @@ function formatDate(str) {
   const d = new Date(str+"T00:00:00");
   return d.toLocaleDateString("pt-BR");
 }
+
+// ══════════════════════════════════════════════
+// PWA — SERVICE WORKER + INSTALL
+// ══════════════════════════════════════════════
+(function initPWA() {
+  // ── Registrar Service Worker ──
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => {
+          console.log('[MedTrack] Service Worker registrado. Escopo:', reg.scope);
+          // Verifica atualizações em background
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                toast('Nova versão disponível! Recarregue o app. 🔄', 'info');
+              }
+            });
+          });
+        })
+        .catch(err => console.warn('[MedTrack] Service Worker erro:', err));
+    });
+  }
+
+  // ── Banner de instalação (Android/Desktop) ──
+  let deferredPrompt = null;
+  const banner = document.getElementById('pwa-banner');
+  const btnInstall = document.getElementById('pwa-install');
+  const btnDismiss = document.getElementById('pwa-dismiss');
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Mostra o banner só se o usuário nunca dispensou
+    if (!localStorage.getItem('mt_pwa_dismissed')) {
+      setTimeout(() => banner.classList.add('show'), 3500);
+    }
+  });
+
+  btnInstall && btnInstall.addEventListener('click', async () => {
+    banner.classList.remove('show');
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      toast('MedTrack instalado com sucesso! 🎉', 'success');
+    }
+    deferredPrompt = null;
+  });
+
+  btnDismiss && btnDismiss.addEventListener('click', () => {
+    banner.classList.remove('show');
+    localStorage.setItem('mt_pwa_dismissed', '1');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    banner.classList.remove('show');
+    deferredPrompt = null;
+    toast('App instalado! Acesse pela tela inicial 📲', 'success');
+  });
+
+  // ── Barra de offline ──
+  const offlineBar = document.getElementById('offline-bar');
+  const updateOfflineBar = () => {
+    if (!navigator.onLine) {
+      offlineBar.classList.add('show');
+    } else {
+      offlineBar.classList.remove('show');
+    }
+  };
+  updateOfflineBar();
+  window.addEventListener('online',  updateOfflineBar);
+  window.addEventListener('offline', updateOfflineBar);
+})();
 </script>
 </body>
 </html>
