@@ -725,7 +725,10 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
       </div>
 
       <div class="hdr-right">
-
+        <div class="sync-pill">
+          <div class="sync-dot" id="syncDot"></div>
+          <span id="syncStatus">offline</span>
+        </div>
         <button class="ic-btn" onclick="toggleTheme()" title="Tema">
           <span id="themeIco">☀️</span>
         </button>
@@ -825,7 +828,7 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
             <div class="prog-row"><span class="prog-lbl">Tratamento</span><span class="prog-pct" id="progPct">0%</span></div>
             <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
             <div style="font-size:.72rem;color:var(--t3);line-height:1.55">
-              Dados salvos localmente no dispositivo.
+              Sincronizado com Google Sheets em tempo real.
             </div>
           </div>
         </div>
@@ -835,7 +838,7 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
       <div class="panel">
         <div class="ph">
           <div class="pt"><div class="pi">📋</div>Medicações — <span id="listPatientName" style="color:var(--a)">todos</span></div>
-          <button class="btn btn-s btn-sm" style="visibility:hidden">🔄</button>
+          <button class="btn btn-s btn-sm" onclick="syncFromSheet()">🔄 Sync</button>
         </div>
         <div class="filter-row">
           <button class="fb on" data-f="todos" onclick="setFilter('todos',this)">Todos</button>
@@ -934,20 +937,6 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
 
       <div class="g3" id="patientGrid">
         <div class="empty" style="grid-column:1/-1"><div class="empty-ico">👥</div><p>Nenhum paciente.<br>Adicione o primeiro perfil.</p></div>
-      </div>
-
-      <!-- BACKUP / RESTAURAR -->
-      <div class="panel" style="margin-top:24px;padding:20px">
-        <div class="pt" style="margin-bottom:16px"><div class="pi">💾</div>Backup &amp; Restaurar</div>
-        <p style="font-size:.8rem;color:var(--t3);margin-bottom:16px;line-height:1.6">
-          Exporte todos os dados para um arquivo <strong>.json</strong> e restaure quando precisar.
-          A importação <strong>substitui</strong> todos os dados atuais.
-        </p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-p btn-sm" onclick="exportarBackup()">⬇️ Exportar JSON</button>
-          <button class="btn btn-s btn-sm" onclick="document.getElementById('importFileInput').click()">⬆️ Importar JSON</button>
-          <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importarBackup(event)">
-        </div>
       </div>
     </div>
 
@@ -1179,7 +1168,7 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
-// Armazenamento local — sem sincronização remota
+const API_URL = "https://script.google.com/macros/s/AKfycbxL8YU8i62Y0TFHlo7aAgur3I2UwVJ0VqTMUXdpL2p45gW-JRV9NgS6W0c_N_TR8drueg/exec";
 
 // ══════════════════════════════════════════════
 // ESTADO
@@ -1214,6 +1203,7 @@ function initApp() {
   startClock();
   checkConnection();
   renderAll();
+  syncFromSheet();
   setInterval(() => { renderAll(); }, 30000);
   // Tema salvo
   const tema = localStorage.getItem("mt_tema") || "dark";
@@ -1248,11 +1238,22 @@ function toggleTheme() {
 // CONEXÃO
 // ══════════════════════════════════════════════
 function checkConnection() {
-  // Modo local — sem sincronização remota
+  const dot = document.getElementById("syncDot");
+  const lbl = document.getElementById("syncStatus");
+  const upd = () => {
+    dot.className = "sync-dot " + (navigator.onLine ? "on" : "");
+    lbl.textContent = navigator.onLine ? "online" : "offline";
+  };
+  upd();
+  window.addEventListener("online",  () => { upd(); syncFromSheet(); });
+  window.addEventListener("offline", upd);
 }
 
 function setSyncing(v) {
-  // Modo local — sem sincronização remota
+  const dot = document.getElementById("syncDot");
+  const lbl = document.getElementById("syncStatus");
+  if(v){ dot.className="sync-dot sy"; lbl.textContent="sincronizando..."; }
+  else { dot.className="sync-dot " + (navigator.onLine?"on":""); lbl.textContent=navigator.onLine?"online":"offline"; }
 }
 
 // ══════════════════════════════════════════════
@@ -2003,63 +2004,50 @@ function stopAlarme() {
 }
 
 // ══════════════════════════════════════════════
-// BACKUP / RESTAURAR
+// SYNC SHEETS
 // ══════════════════════════════════════════════
-function exportarBackup() {
-  const backup = {
-    versao: 1,
-    exportadoEm: new Date().toISOString(),
-    pacientes:  state.pacientes,
-    medicacoes: state.medicacoes,
-    estoque:    state.estoque,
-    compras:    state.compras,
-    historico:  state.historico,
-  };
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  const data = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
-  a.href     = url;
-  a.download = `medtrack-backup-${data}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast("Backup exportado com sucesso ✓", "success");
+async function syncToSheet() {
+  if(!navigator.onLine || API_URL.includes("COLE")) return;
+  setSyncing(true);
+  try {
+    await fetch(API_URL, {
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"salvar", payload: {
+        medicacoes: state.medicacoes,
+        estoque:    state.estoque,
+        compras:    state.compras,
+        pacientes:  state.pacientes,
+        historico:  state.historico,
+      }})
+    });
+    toast("Sincronizado com Google Sheets ✓","success");
+  } catch { toast("Erro ao sincronizar","error"); }
+  setSyncing(false);
 }
 
-function importarBackup(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const d = JSON.parse(e.target.result);
-      if (!d.pacientes && !d.medicacoes && !d.estoque) {
-        toast("Arquivo inválido ou corrompido", "error");
-        return;
-      }
-      if (!confirm("⚠️ Isso irá substituir TODOS os dados atuais pelo backup. Confirma?")) {
-        event.target.value = "";
-        return;
-      }
-      if (d.pacientes)  state.pacientes  = d.pacientes;
-      if (d.medicacoes) state.medicacoes = d.medicacoes;
-      if (d.estoque)    state.estoque    = d.estoque;
-      if (d.compras)    state.compras    = d.compras;
-      if (d.historico)  state.historico  = d.historico;
-      save();
-      renderAll();
-      toast("Backup restaurado com sucesso ✓", "success");
-    } catch {
-      toast("Erro ao ler o arquivo JSON", "error");
+async function syncFromSheet() {
+  if(!navigator.onLine || API_URL.includes("COLE")) return;
+  setSyncing(true);
+  try {
+    const r = await fetch(`${API_URL}?action=carregar`);
+    const d = await r.json();
+    if(d.medicacoes) {
+      // Mescla preservando tomados locais
+      const mapa = {};
+      state.medicacoes.forEach(m => mapa[m.id]=m);
+      d.medicacoes.forEach(m => { if(!mapa[m.id]) mapa[m.id]=m; else if(mapa[m.id].tomado) m.tomado=true; });
+      state.medicacoes = Object.values(mapa);
     }
-    event.target.value = "";
-  };
-  reader.readAsText(file);
+    if(d.estoque)   state.estoque   = d.estoque;
+    if(d.compras)   state.compras   = d.compras;
+    if(d.pacientes) state.pacientes = d.pacientes;
+    if(d.historico) state.historico = d.historico;
+    save(); renderAll();
+    toast("Dados atualizados do Sheets ✓","info");
+  } catch {}
+  setSyncing(false);
 }
-
-
-function syncToSheet()   { /* modo local — sem Google Sheets */ }
-function syncFromSheet() { /* modo local — sem Google Sheets */ }
 
 // ══════════════════════════════════════════════
 // MODAL
