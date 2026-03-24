@@ -655,6 +655,58 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
 }
 
 /* ═══════════════════════════════════
+   RECORRÊNCIA — UI
+═══════════════════════════════════ */
+.rec-toggle{
+  display:flex;gap:8px;margin-top:4px;
+}
+.rec-opt{
+  flex:1;padding:9px 10px;border-radius:var(--r-sm);
+  border:1.5px solid var(--bdr2);background:var(--bg);
+  color:var(--t2);font-size:.8rem;font-weight:600;
+  cursor:pointer;transition:all var(--t);text-align:center;
+}
+.rec-opt.sel{
+  border-color:var(--a);background:rgba(59,130,246,.1);color:var(--a);
+}
+.rec-fields{
+  display:none;grid-column:1/-1;
+  background:var(--bg2);border:1px solid var(--bdr);
+  border-radius:var(--r-sm);padding:12px;
+  display:none;flex-direction:column;gap:10px;
+}
+.rec-fields.on{display:flex}
+
+/* Badge dias restantes no card */
+.rec-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:99px;
+  font-size:.65rem;font-weight:700;
+  background:rgba(99,102,241,.12);color:var(--a2);
+  margin-top:3px;
+}
+.rec-badge.ending{background:rgba(245,158,11,.12);color:var(--w)}
+.rec-badge.last{background:rgba(239,68,68,.12);color:var(--r-c)}
+
+/* Lista de templates na aba dashboard */
+.tpl-card{
+  background:var(--bg2);border:1px solid var(--bdr);
+  border-radius:var(--r);padding:12px 14px;
+  display:flex;align-items:center;gap:12px;
+}
+.tpl-ico{
+  width:34px;height:34px;border-radius:8px;
+  background:linear-gradient(135deg,var(--a2),var(--p));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;
+}
+.tpl-info{flex:1;min-width:0}
+.tpl-name{font-size:.85rem;font-weight:700;color:var(--t1)}
+.tpl-meta{font-size:.72rem;color:var(--t2);margin-top:2px}
+.tpl-progress{height:4px;background:var(--bg3);border-radius:99px;margin-top:7px;overflow:hidden}
+.tpl-progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .5s var(--ease)}
+
+/* ═══════════════════════════════════
    PWA — INSTALL BANNER
 ═══════════════════════════════════ */
 #pwa-banner{
@@ -799,6 +851,35 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
             <div class="fg"><label class="fl">Vezes ao dia</label><input id="fQtd" type="number" class="fi" placeholder="3" min="1" max="24"></div>
             <div class="fg"><label class="fl">Intervalo (h)</label><input id="fIntervalo" type="number" class="fi" placeholder="8" min="1" max="24"></div>
             <div class="fg"><label class="fl">Início</label><input id="fInicio" type="time" class="fi"></div>
+
+            <!-- RECORRÊNCIA -->
+            <div class="fg" style="grid-column:1/-1">
+              <label class="fl">🔁 Uso do remédio</label>
+              <div class="rec-toggle">
+                <button type="button" class="rec-opt sel" id="recOpcUnico" onclick="setRecorrencia('unico')">📅 Uso único<br><small style="font-weight:400;opacity:.7">Somente hoje</small></button>
+                <button type="button" class="rec-opt" id="recOpcRec" onclick="setRecorrencia('recorrente')">🔁 Recorrente<br><small style="font-weight:400;opacity:.7">Vários dias</small></button>
+              </div>
+            </div>
+
+            <!-- Campos de recorrência (visíveis só quando recorrente) -->
+            <div class="rec-fields" id="recFields" style="grid-column:1/-1">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+                <div class="fg">
+                  <label class="fl">Duração</label>
+                  <input id="recDuracao" type="number" class="fi" placeholder="Ex: 7" min="1" max="365">
+                </div>
+                <div class="fg">
+                  <label class="fl">Período</label>
+                  <select id="recPeriodo" class="fi">
+                    <option value="dias">📆 Dias</option>
+                    <option value="semanas">📅 Semanas</option>
+                    <option value="meses">🗓 Meses</option>
+                  </select>
+                </div>
+              </div>
+              <div id="recResumo" style="font-size:.75rem;color:var(--a);font-weight:600;display:none"></div>
+            </div>
+
             <div class="fg" style="grid-column:1/-1">
               <div style="display:flex;gap:9px">
                 <button class="btn btn-s" style="flex:1" onclick="gerarHorarios()">👁 Prévia</button>
@@ -849,6 +930,15 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
         <div class="med-list" id="medList">
           <div class="empty"><div class="empty-ico">💊</div><p>Nenhuma medicação.<br>Cadastre acima.</p></div>
         </div>
+      </div>
+
+      <!-- Tratamentos recorrentes ativos -->
+      <div class="panel" id="tplPanel" style="margin-top:18px;display:none">
+        <div class="ph">
+          <div class="pt"><div class="pi">🔁</div>Tratamentos em andamento</div>
+          <span id="tplCount" class="badge badge-a">0</span>
+        </div>
+        <div id="tplList" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
     </div>
 
@@ -1179,6 +1269,7 @@ let state = {
   estoque:      JSON.parse(localStorage.getItem("mt_estoque"))      || [],
   compras:      JSON.parse(localStorage.getItem("mt_compras"))      || [],
   historico:    JSON.parse(localStorage.getItem("mt_historico"))    || {},
+  templates:    JSON.parse(localStorage.getItem("mt_templates"))    || [],
   pacienteAtivo: localStorage.getItem("mt_pacAtivo") || null,
   filtro: "todos",
   alarmeAtivo: false,
@@ -1202,9 +1293,12 @@ window.addEventListener("load", () => {
 function initApp() {
   startClock();
   checkConnection();
+  gerarMedicacoesHoje();   // ← gera doses do dia para tratamentos recorrentes
   renderAll();
   syncFromSheet();
   setInterval(() => { renderAll(); }, 30000);
+  // Verifica recorrência a cada hora (para virada de dia)
+  setInterval(() => { gerarMedicacoesHoje(); }, 60 * 60 * 1000);
   // Tema salvo
   const tema = localStorage.getItem("mt_tema") || "dark";
   document.documentElement.setAttribute("data-theme", tema);
@@ -1282,11 +1376,13 @@ function save() {
   localStorage.setItem("mt_estoque",    JSON.stringify(state.estoque));
   localStorage.setItem("mt_compras",    JSON.stringify(state.compras));
   localStorage.setItem("mt_historico",  JSON.stringify(state.historico));
+  localStorage.setItem("mt_templates",  JSON.stringify(state.templates));
   localStorage.setItem("mt_pacAtivo",   state.pacienteAtivo || "");
 }
 
 function renderAll() {
   renderDashboard();
+  renderTemplates();
   renderEstoque();
   renderCompras();
   renderPacientes();
@@ -1419,9 +1515,51 @@ function excluirPaciente(id) {
 }
 
 // ══════════════════════════════════════════════
-// MEDICAÇÕES
+// MEDICAÇÕES + RECORRÊNCIA
 // ══════════════════════════════════════════════
 let tempHorarios = [];
+let recorrenciaAtual = "unico"; // "unico" | "recorrente"
+
+function setRecorrencia(tipo) {
+  recorrenciaAtual = tipo;
+  document.getElementById("recOpcUnico").classList.toggle("sel", tipo === "unico");
+  document.getElementById("recOpcRec").classList.toggle("sel", tipo === "recorrente");
+  const fields = document.getElementById("recFields");
+  if (tipo === "recorrente") {
+    fields.classList.add("on");
+  } else {
+    fields.classList.remove("on");
+    document.getElementById("recResumo").style.display = "none";
+  }
+}
+
+function calcDiasTotal() {
+  const dur = parseInt(document.getElementById("recDuracao").value) || 0;
+  const per = document.getElementById("recPeriodo").value;
+  if (!dur) return 0;
+  if (per === "dias")    return dur;
+  if (per === "semanas") return dur * 7;
+  if (per === "meses")   return dur * 30;
+  return 0;
+}
+
+// Atualiza resumo ao digitar
+document.addEventListener("DOMContentLoaded", () => {
+  const upd = () => {
+    const dias = calcDiasTotal();
+    const resumo = document.getElementById("recResumo");
+    if (dias > 0 && recorrenciaAtual === "recorrente") {
+      const fim = new Date();
+      fim.setDate(fim.getDate() + dias - 1);
+      resumo.style.display = "block";
+      resumo.textContent = `📅 Tratamento de ${dias} dia(s) — até ${fim.toLocaleDateString("pt-BR", {day:"numeric",month:"long",year:"numeric"})}`;
+    } else {
+      resumo.style.display = "none";
+    }
+  };
+  document.getElementById("recDuracao")?.addEventListener("input", upd);
+  document.getElementById("recPeriodo")?.addEventListener("change", upd);
+});
 
 function gerarHorarios() {
   tempHorarios = [];
@@ -1441,7 +1579,6 @@ function gerarHorarios() {
       pacienteId: state.pacienteAtivo, foto: null,
       fotoTimestamp: null });
   }
-  // Preview
   document.getElementById("preview").style.display = "block";
   document.getElementById("previewChips").innerHTML = tempHorarios.map((r,i) =>
     `<div style="padding:5px 12px;border-radius:99px;background:var(--bg3);border:1px solid var(--bdr);font-family:var(--fm);font-size:.8rem;color:var(--a);font-weight:600;animation:fadeUp .2s var(--ease) ${i*.04}s both">${r.hora}</div>`
@@ -1452,13 +1589,160 @@ function gerarHorarios() {
 function salvarMed() {
   if(!tempHorarios.length){ toast("Gere os horários primeiro","warn"); return; }
   if(!state.pacienteAtivo){ toast("Selecione um paciente primeiro","warn"); openPage("pacientes"); return; }
-  state.medicacoes.push(...tempHorarios);
-  registrarHistorico();
-  save(); syncToSheet(); renderDashboard();
-  ["fNome","fDose","fQtd","fIntervalo","fInicio"].forEach(id => document.getElementById(id).value="");
-  document.getElementById("preview").style.display="none";
-  tempHorarios=[];
-  toast("Medicação salva!","success");
+
+  if (recorrenciaAtual === "recorrente") {
+    const dias = calcDiasTotal();
+    if (!dias) { toast("Informe a duração do tratamento","warn"); return; }
+    // Salva template recorrente
+    const durInput = parseInt(document.getElementById("recDuracao").value);
+    const periodo  = document.getElementById("recPeriodo").value;
+    const dataFim  = new Date();
+    dataFim.setDate(dataFim.getDate() + dias - 1);
+
+    const tpl = {
+      id: Date.now(),
+      nome:       tempHorarios[0].nome,
+      tipo:       tempHorarios[0].tipo,
+      dose:       tempHorarios[0].dose,
+      pacienteId: state.pacienteAtivo,
+      horarios:   tempHorarios.map(h => h.hora),
+      qtd:        tempHorarios.length,
+      diasTotal:  dias,
+      duracao:    durInput,
+      periodo,
+      dataInicio: new Date().toDateString(),
+      dataFim:    dataFim.toDateString(),
+      ultimaGeracao: null,
+      ativo: true,
+    };
+    state.templates.push(tpl);
+    // Gera doses de hoje
+    gerarDosesTemplate(tpl);
+    save(); syncToSheet(); renderAll();
+    limparFormMed();
+    toast(`Tratamento de ${durInput} ${periodo} salvo! 🔁`, "success");
+  } else {
+    // Uso único — comportamento original
+    state.medicacoes.push(...tempHorarios);
+    registrarHistorico();
+    save(); syncToSheet(); renderDashboard();
+    limparFormMed();
+    toast("Medicação salva!","success");
+  }
+}
+
+function limparFormMed() {
+  ["fNome","fDose","fQtd","fIntervalo","fInicio","recDuracao"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  document.getElementById("preview").style.display = "none";
+  document.getElementById("recResumo").style.display = "none";
+  document.getElementById("recFields").classList.remove("on");
+  setRecorrencia("unico");
+  tempHorarios = [];
+}
+
+// ── Gera as doses do dia para um template ──
+function gerarDosesTemplate(tpl) {
+  const hoje = new Date().toDateString();
+  if (tpl.ultimaGeracao === hoje) return;           // já gerou hoje
+  const dataFim  = new Date(tpl.dataFim);
+  const agora    = new Date();
+  agora.setHours(0,0,0,0);
+  if (agora > dataFim) {                            // tratamento encerrado
+    tpl.ativo = false;
+    return;
+  }
+  // Cria instâncias de hoje
+  tpl.horarios.forEach((hora, i) => {
+    // Evita duplicatas
+    const jaExiste = state.medicacoes.some(m =>
+      m.templateId === tpl.id &&
+      m.data === hoje &&
+      m.hora === hora
+    );
+    if (!jaExiste) {
+      state.medicacoes.push({
+        id: Date.now() + i + Math.random()*1000|0,
+        nome:       tpl.nome,
+        tipo:       tpl.tipo,
+        dose:       tpl.dose,
+        hora,
+        tomado:     false,
+        data:       hoje,
+        pacienteId: tpl.pacienteId,
+        foto:       null,
+        fotoTimestamp: null,
+        templateId: tpl.id,       // ← vínculo ao template
+      });
+    }
+  });
+  tpl.ultimaGeracao = hoje;
+}
+
+// ── Roda ao abrir o app e a cada hora ──
+function gerarMedicacoesHoje() {
+  let houveMudanca = false;
+  state.templates.forEach(tpl => {
+    if (!tpl.ativo) return;
+    const antes = tpl.ultimaGeracao;
+    gerarDosesTemplate(tpl);
+    if (tpl.ultimaGeracao !== antes) houveMudanca = true;
+  });
+  if (houveMudanca) {
+    registrarHistorico();
+    save();
+  }
+}
+
+// ── Calcula dias restantes de um template ──
+function diasRestantes(tpl) {
+  const fim   = new Date(tpl.dataFim);
+  const hoje  = new Date();
+  hoje.setHours(0,0,0,0);
+  return Math.max(0, Math.ceil((fim - hoje) / (1000*60*60*24)) + 1);
+}
+
+// ── Renderiza painel de templates ──
+function renderTemplates() {
+  const panel  = document.getElementById("tplPanel");
+  const list   = document.getElementById("tplList");
+  const count  = document.getElementById("tplCount");
+  const ativos = state.templates.filter(t => t.ativo && (
+    state.pacienteAtivo ? String(t.pacienteId) === String(state.pacienteAtivo) : true
+  ));
+
+  if (!ativos.length) { panel.style.display = "none"; return; }
+  panel.style.display = "block";
+  count.textContent = ativos.length;
+
+  list.innerHTML = ativos.map(tpl => {
+    const rest = diasRestantes(tpl);
+    const pct  = Math.max(0, Math.round((1 - rest / tpl.diasTotal) * 100));
+    const pac  = state.pacientes.find(p => String(p.id) === String(tpl.pacienteId));
+    const badgeCls = rest <= 2 ? "last" : rest <= 5 ? "ending" : "";
+    const tipoIco = {comprimido:"💊",liquido:"🧪",capsula:"💉",gotas:"💧",outro:"📦"}[tpl.tipo]||"💊";
+    return `
+    <div class="tpl-card">
+      <div class="tpl-ico">${tipoIco}</div>
+      <div class="tpl-info">
+        <div class="tpl-name">${tpl.nome} <span style="font-size:.72rem;color:var(--t3);font-weight:400">${tpl.dose||""}</span></div>
+        <div class="tpl-meta">${tpl.horarios.join(" · ")} · ${pac?pac.nome:"—"}</div>
+        <div class="rec-badge ${badgeCls}">🔁 ${rest} dia${rest!==1?"s":""} restante${rest!==1?"s":""} de ${tpl.diasTotal}</div>
+        <div class="tpl-progress"><div class="tpl-progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <button class="btn btn-r btn-xs" onclick="pararTemplate(${tpl.id})" title="Encerrar tratamento">✕</button>
+    </div>`;
+  }).join("");
+}
+
+function pararTemplate(id) {
+  if (!confirm("Encerrar este tratamento recorrente? Não serão geradas mais doses futuras.")) return;
+  const tpl = state.templates.find(t => t.id === id);
+  if (tpl) tpl.ativo = false;
+  save(); renderAll();
+  toast("Tratamento encerrado","info");
 }
 
 function getStatus(r) {
@@ -1530,6 +1814,7 @@ function renderDashboard() {
         <div class="mc-status ${st}">
           ${st==="tomado"?"✅ Tomado":st==="alerta"?"⚠️ TOMAR AGORA!":"⏳ Aguardando"}
           ${r.fotoTimestamp ? `· 📸 ${new Date(r.fotoTimestamp).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}` : ""}
+          ${r.templateId ? `<span class="rec-badge" style="margin-left:4px">🔁 recorrente</span>` : ""}
         </div>
       </div>
       <div class="mc-actions">
@@ -2019,6 +2304,7 @@ async function syncToSheet() {
         compras:    state.compras,
         pacientes:  state.pacientes,
         historico:  state.historico,
+        templates:  state.templates,
       }})
     });
     toast("Sincronizado com Google Sheets ✓","success");
@@ -2043,6 +2329,7 @@ async function syncFromSheet() {
     if(d.compras)   state.compras   = d.compras;
     if(d.pacientes) state.pacientes = d.pacientes;
     if(d.historico) state.historico = d.historico;
+    if(d.templates) state.templates = d.templates;
     save(); renderAll();
     toast("Dados atualizados do Sheets ✓","info");
   } catch {}
