@@ -655,6 +655,138 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
 }
 
 /* ═══════════════════════════════════
+   CARD MEDICAÇÃO — REDESIGN
+═══════════════════════════════════ */
+.mc{
+  border:1px solid var(--bdr);border-radius:var(--r);
+  background:var(--surf2);overflow:hidden;
+  animation:fadeUp .3s var(--ease) both;
+  transition:border-color var(--t),box-shadow var(--t);
+}
+.mc:hover{border-color:var(--bdr2);box-shadow:var(--shadow-sm)}
+.mc.alerta{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.04)}
+.mc.pendente{border-color:var(--bdr)}
+.mc.justificado{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)}
+
+.mc-top{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 14px 10px;
+}
+.mc-time-bubble{
+  min-width:54px;height:54px;border-radius:12px;
+  background:var(--bg3);border:1px solid var(--bdr2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.mc-time-bubble .mc-time{font-family:var(--fm);font-size:.88rem;font-weight:700;color:var(--a);line-height:1}
+.mc-time-bubble .mc-time-lbl{font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+.mc.alerta .mc-time-bubble{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)}
+.mc.alerta .mc-time-bubble .mc-time{color:var(--w)}
+
+.mc-body{flex:1;min-width:0}
+.mc-name{font-size:.92rem;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-meta{font-size:.75rem;color:var(--t2);margin-top:2px}
+.mc-status-row{margin-top:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+.mc-foto-thumb{
+  width:42px;height:42px;border-radius:8px;object-fit:cover;
+  flex-shrink:0;cursor:pointer;border:1.5px solid var(--bdr2);
+  transition:transform var(--t);
+}
+.mc-foto-thumb:hover{transform:scale(1.08)}
+
+.mc-btns{
+  display:flex;gap:6px;
+  padding:10px 14px 13px;
+  border-top:1px solid var(--bdr);
+  background:rgba(0,0,0,.06);
+  flex-wrap:wrap;
+}
+[data-theme="light"] .mc-btns{background:rgba(0,0,0,.03)}
+
+.mc-btn{
+  flex:1;min-width:70px;
+  height:36px;border-radius:8px;border:1.5px solid var(--bdr2);
+  background:var(--surf);color:var(--t2);
+  font-family:var(--f);font-size:.76rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  cursor:pointer;transition:all var(--t);
+}
+.mc-btn:hover{transform:translateY(-1px)}
+.mc-btn.tomado-btn{border-color:var(--g);color:var(--g);background:rgba(16,185,129,.07)}
+.mc-btn.tomado-btn:hover{background:var(--g);color:#fff}
+.mc-btn.foto-btn{border-color:var(--a);color:var(--a);background:rgba(59,130,246,.07)}
+.mc-btn.foto-btn:hover{background:var(--a);color:#fff}
+.mc-btn.just-btn{border-color:var(--w);color:var(--w);background:rgba(245,158,11,.07)}
+.mc-btn.just-btn:hover{background:var(--w);color:#fff}
+.mc-btn.del-btn{border-color:var(--r-c);color:var(--r-c);background:rgba(239,68,68,.07);flex:0;min-width:36px;width:36px}
+.mc-btn.del-btn:hover{background:var(--r-c);color:#fff}
+
+/* Status chips */
+.chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:.67rem;font-weight:700}
+.chip-alerta{background:rgba(245,158,11,.15);color:var(--w)}
+.chip-pendente{background:rgba(100,116,139,.12);color:var(--t2)}
+.chip-just{background:rgba(245,158,11,.15);color:var(--w)}
+.chip-rec{background:rgba(99,102,241,.12);color:var(--a2)}
+
+/* ═══════════════════════════════════
+   CALENDÁRIO HISTÓRICO
+═══════════════════════════════════ */
+.cal-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.cal-month{font-size:1rem;font-weight:800;color:var(--t1);text-transform:capitalize}
+.cal-nav-btn{
+  width:32px;height:32px;border-radius:8px;
+  border:1px solid var(--bdr2);background:var(--surf2);
+  color:var(--t2);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all var(--t);
+}
+.cal-nav-btn:hover{background:var(--a);color:#fff;border-color:var(--a)}
+
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{
+  text-align:center;font-size:.62rem;font-weight:700;
+  color:var(--t3);text-transform:uppercase;letter-spacing:.06em;
+  padding:4px 0 8px;
+}
+.cal-day{
+  aspect-ratio:1;border-radius:8px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:.78rem;font-weight:700;cursor:default;
+  position:relative;border:1.5px solid transparent;
+  transition:transform var(--t);
+}
+.cal-day:hover{transform:scale(1.08)}
+.cal-day.empty{background:transparent}
+.cal-day.hoje{border-color:var(--a)!important;box-shadow:0 0 0 2px var(--glow)}
+.cal-day.sem-dados{background:var(--bg3);color:var(--t3)}
+.cal-day.tomado-total{background:rgba(16,185,129,.18);color:var(--g);border-color:rgba(16,185,129,.3)}
+.cal-day.tomado-parcial{background:rgba(59,130,246,.12);color:var(--a);border-color:rgba(59,130,246,.2)}
+.cal-day.nao-tomado{background:rgba(245,158,11,.15);color:var(--w);border-color:rgba(245,158,11,.3)}
+.cal-day.justificado{background:rgba(245,158,11,.15);color:var(--w);border-color:rgba(245,158,11,.3)}
+.cal-day.futuro{background:transparent;color:var(--t3);opacity:.35}
+
+.cal-day .cal-icon{font-size:.65rem;margin-top:1px}
+.cal-day .cal-num{line-height:1}
+
+.cal-legenda{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
+.cal-leg-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--t2)}
+.cal-leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* Tooltip do dia */
+.cal-day[data-tip]:hover::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--surf2);border:1px solid var(--bdr2);
+  border-radius:6px;padding:4px 8px;font-size:.68rem;color:var(--t1);
+  white-space:nowrap;z-index:100;box-shadow:var(--shadow-sm);font-weight:400;
+  pointer-events:none;
+}
+
+/* ═══════════════════════════════════
    RECORRÊNCIA — UI
 ═══════════════════════════════════ */
 .rec-toggle{
@@ -834,7 +966,7 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
       <div class="g2" style="margin-bottom:18px">
         <!-- FORMULÁRIO -->
         <div class="panel">
-          <div class="ph"><div class="pt"><div class="pi">➕</div>Nova Medicação</div></div>
+          <div class="ph"><div class="pt"><div class="pi">💊</div>Adicionar Remédio</div></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
             <div class="fg"><label class="fl">Remédio</label><input id="fNome" class="fi" placeholder="Nome do remédio"></div>
             <div class="fg">
@@ -915,17 +1047,14 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
         </div>
       </div>
 
-      <!-- Lista -->
+      <!-- Lista de medicações do dia -->
       <div class="panel">
         <div class="ph">
-          <div class="pt"><div class="pi">📋</div>Medicações — <span id="listPatientName" style="color:var(--a)">todos</span></div>
-          <button class="btn btn-s btn-sm" onclick="syncFromSheet()">🔄 Sync</button>
-        </div>
-        <div class="filter-row">
-          <button class="fb on" data-f="todos" onclick="setFilter('todos',this)">Todos</button>
-          <button class="fb" data-f="pendente" onclick="setFilter('pendente',this)">Pendentes</button>
-          <button class="fb" data-f="alerta" onclick="setFilter('alerta',this)">Atrasados</button>
-          <button class="fb" data-f="tomado" onclick="setFilter('tomado',this)">Tomados</button>
+          <div class="pt"><div class="pi">📋</div>Hoje — <span id="listPatientName" style="color:var(--a)">todos</span></div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span id="pendBadge" class="badge badge-w" style="display:none"></span>
+            <button class="btn btn-s btn-sm" onclick="syncFromSheet()">🔄 Sync</button>
+          </div>
         </div>
         <div class="med-list" id="medList">
           <div class="empty"><div class="empty-ico">💊</div><p>Nenhuma medicação.<br>Cadastre acima.</p></div>
@@ -944,6 +1073,23 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
 
     <!-- ══ PAGE: HISTÓRICO ══ -->
     <div class="page" id="page-historico">
+
+      <!-- Calendário -->
+      <div class="panel" style="margin-bottom:18px">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="calNav(-1)">‹</button>
+          <div class="cal-month" id="calTitle"></div>
+          <button class="cal-nav-btn" onclick="calNav(1)">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legenda">
+          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(16,185,129,.4)"></div>Tomado 100%</div>
+          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(59,130,246,.3)"></div>Parcial</div>
+          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(245,158,11,.35)"></div>Não tomado</div>
+          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:rgba(245,158,11,.35);outline:1px dashed var(--w);outline-offset:1px"></div>Justificado</div>
+        </div>
+      </div>
+
       <div class="g2" style="margin-bottom:18px">
         <div class="panel">
           <div class="ph"><div class="pt"><div class="pi">📈</div>Aderência — 7 dias</div></div>
@@ -1238,6 +1384,39 @@ textarea.fi{height:auto;padding:10px 12px;resize:vertical;min-height:72px}
     <div class="modal-foot">
       <button class="btn btn-s" onclick="closePhotoModal()">Cancelar</button>
       <button class="btn btn-g" onclick="confirmarComFoto()">✅ Confirmar tomada</button>
+    </div>
+  </div>
+</div>
+
+<!-- JUSTIFICAR NÃO TOMADO -->
+<div class="overlay" id="justModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-hdr">
+      <div class="modal-title">⚠️ Justificar não tomada</div>
+      <button class="close-btn" onclick="hideModal('justModal')">✕</button>
+    </div>
+    <input type="hidden" id="justMedId">
+    <div class="modal-body">
+      <div id="justMedInfo" style="background:var(--bg3);border-radius:var(--r-sm);padding:10px 12px;font-size:.82rem;color:var(--t2);margin-bottom:4px"></div>
+      <div class="fg">
+        <label class="fl">Motivo</label>
+        <select id="justMotivo" class="fi">
+          <option value="Esquecimento">😅 Esquecimento</option>
+          <option value="Efeito colateral">🤢 Efeito colateral</option>
+          <option value="Remédio acabou">📦 Remédio acabou</option>
+          <option value="Médico orientou suspender">👨‍⚕️ Médico orientou suspender</option>
+          <option value="Internação/consulta">🏥 Internação / consulta</option>
+          <option value="Outro">✏️ Outro motivo</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Observação (opcional)</label>
+        <textarea id="justObs" class="fi" placeholder="Detalhe o motivo se quiser..." style="min-height:72px"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="hideModal('justModal')">Cancelar</button>
+      <button class="btn" style="background:var(--w);color:#fff" onclick="confirmarJustificativa()">⚠️ Justificar</button>
     </div>
   </div>
 </div>
@@ -1766,10 +1945,11 @@ function renderDashboard() {
   const mine  = pac ? todas.filter(m => String(m.pacienteId) === String(pac)) : todas;
 
   // Stats
-  const total    = mine.length;
-  const tomados  = mine.filter(m => m.tomado).length;
-  const pendentes= mine.filter(m => getStatus(m)==="pendente").length;
-  const atrasados= mine.filter(m => getStatus(m)==="alerta").length;
+  const total     = mine.length;
+  const tomados   = mine.filter(m => m.tomado).length;
+  const justifs   = mine.filter(m => m.justificado).length;
+  const pendentes = mine.filter(m => getStatus(m)==="pendente").length;
+  const atrasados = mine.filter(m => getStatus(m)==="alerta").length;
   document.getElementById("stTotal").textContent    = total;
   document.getElementById("stTomados").textContent  = tomados;
   document.getElementById("stPendentes").textContent= pendentes;
@@ -1781,60 +1961,124 @@ function renderDashboard() {
   document.getElementById("progFill").style.width = pct+"%";
 
   // Próxima dose
-  const prox = mine.filter(m=>!m.tomado).sort((a,b)=>a.hora.localeCompare(b.hora))[0];
+  const prox = mine.filter(m=>!m.tomado&&!m.justificado).sort((a,b)=>a.hora.localeCompare(b.hora))[0];
   document.getElementById("nextDose").innerHTML = prox
     ? `<div class="next-ico">💊</div><div class="next-info"><strong>${prox.nome}</strong><span>${prox.dose||""} · às ${prox.hora}</span></div>`
     : `<div class="next-ico">✅</div><div class="next-info"><strong>Tudo em dia!</strong><span>Todas as doses tomadas</span></div>`;
 
-  // Lista
-  let lista = mine;
-  if(state.filtro !== "todos") lista = mine.filter(m => getStatus(m) === state.filtro);
-  lista = [...lista].sort((a,b)=>a.hora.localeCompare(b.hora));
+  // Badge pendentes
+  const pBadge = document.getElementById("pendBadge");
+  const nPend = mine.filter(m => !m.tomado && !m.justificado).length;
+  if (nPend > 0) {
+    pBadge.style.display = "inline-flex";
+    pBadge.textContent = `${nPend} pendente${nPend!==1?"s":""}`;
+  } else {
+    pBadge.style.display = "none";
+  }
+
+  // Lista — mostra apenas não-tomados e não-justificados
+  const lista = [...mine]
+    .filter(m => !m.tomado && !m.justificado)
+    .sort((a,b) => a.hora.localeCompare(b.hora));
 
   const el = document.getElementById("medList");
-  if(!lista.length){
-    el.innerHTML = `<div class="empty"><div class="empty-ico">💊</div><p>Nenhuma dose encontrada.</p></div>`; return;
+
+  if (!lista.length) {
+    const algumJust = mine.some(m => m.justificado);
+    el.innerHTML = `
+      <div class="empty">
+        <div class="empty-ico">${tomados===total&&total>0?"✅":"💊"}</div>
+        <p>${tomados===total&&total>0?"Todas as doses tomadas hoje! 🎉":algumJust?"Todas as doses tratadas (tomadas ou justificadas)":"Nenhuma dose pendente."}</p>
+      </div>`;
+    if (tomados > 0 || algumJust) {
+      el.innerHTML += `<div style="text-align:center;padding:0 0 12px">
+        <button class="btn btn-s btn-sm" onclick="verTodasHoje()">Ver doses do dia →</button>
+      </div>`;
+    }
+    atualizarBadgeEstoque();
+    return;
   }
 
   let alarme = false;
   el.innerHTML = "";
 
-  lista.forEach((r,i) => {
+  lista.forEach((r, i) => {
     const st = getStatus(r);
-    if(st==="alerta") alarme = true;
+    if (st === "alerta") alarme = true;
     const tipoIco = {comprimido:"💊",liquido:"🧪",capsula:"💉",gotas:"💧",outro:"📦"}[r.tipo]||"💊";
+
     const card = document.createElement("div");
     card.className = `mc ${st}`;
     card.style.animationDelay = `${i*.04}s`;
+
+    const chipHtml = st === "alerta"
+      ? `<span class="chip chip-alerta">⚠️ TOMAR AGORA</span>`
+      : `<span class="chip chip-pendente">⏳ Aguardando</span>`;
+
+    const recHtml = r.templateId
+      ? `<span class="chip chip-rec">🔁 recorrente</span>`
+      : "";
+
+    const fotoThumbHtml = r.foto
+      ? `<img class="mc-foto-thumb" src="${r.foto}" onclick="viewPhoto(${r.id})" title="Ver foto">`
+      : "";
+
     card.innerHTML = `
-      <div class="mc-time">${r.hora}</div>
-      <div class="mc-info">
-        <div class="mc-name">${tipoIco} ${r.nome}</div>
-        <div class="mc-meta">${r.dose||""} · ${r.tipo||"comprimido"}</div>
-        <div class="mc-status ${st}">
-          ${st==="tomado"?"✅ Tomado":st==="alerta"?"⚠️ TOMAR AGORA!":"⏳ Aguardando"}
-          ${r.fotoTimestamp ? `· 📸 ${new Date(r.fotoTimestamp).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}` : ""}
-          ${r.templateId ? `<span class="rec-badge" style="margin-left:4px">🔁 recorrente</span>` : ""}
+      <div class="mc-top">
+        <div class="mc-time-bubble">
+          <div class="mc-time">${r.hora}</div>
+          <div class="mc-time-lbl">hora</div>
         </div>
+        <div class="mc-body">
+          <div class="mc-name">${tipoIco} ${r.nome}</div>
+          <div class="mc-meta">${r.dose||""} · ${r.tipo||"comprimido"}</div>
+          <div class="mc-status-row">${chipHtml}${recHtml}</div>
+        </div>
+        ${fotoThumbHtml}
       </div>
-      <div class="mc-actions">
-        ${r.foto ? `<img class="mc-photo" src="${r.foto}" onclick="viewPhoto(${r.id})" title="Ver foto">` : ""}
-        ${!r.tomado ? `
-          <button class="btn btn-sm" style="background:var(--a);color:#fff;font-size:.72rem" onclick="abrirFoto(${r.id})">📸</button>
-          <button class="btn btn-sm" style="background:var(--g);color:#fff;font-size:.72rem" onclick="marcar(${r.id})">✓</button>
-        ` : ""}
-        <button class="btn btn-r btn-xs" onclick="excluirMed(${r.id})">✕</button>
+      <div class="mc-btns">
+        <button class="mc-btn foto-btn" onclick="abrirFoto(${r.id})">📸 Foto</button>
+        <button class="mc-btn tomado-btn" onclick="marcar(${r.id})">✓ Tomado</button>
+        <button class="mc-btn just-btn" onclick="abrirJustificativa(${r.id})">⚠️ Justificar</button>
+        <button class="mc-btn del-btn" onclick="excluirMed(${r.id})" title="Excluir">🗑</button>
       </div>
     `;
     el.appendChild(card);
   });
 
-  if(alarme && !state.alarmeAtivo) startAlarme();
-  if(!alarme && state.alarmeAtivo) stopAlarme();
+  if (alarme && !state.alarmeAtivo) startAlarme();
+  if (!alarme && state.alarmeAtivo) stopAlarme();
 
-  // Badge atrasados na tab
-  // (usamos em estoque também)
   atualizarBadgeEstoque();
+  renderTemplates();
+}
+
+function verTodasHoje() {
+  const hoje = new Date().toDateString();
+  const pac = state.pacienteAtivo;
+  const todas = state.medicacoes.filter(m => m.data === hoje);
+  const mine  = pac ? todas.filter(m => String(m.pacienteId) === String(pac)) : todas;
+  const tipoIco = {comprimido:"💊",liquido:"🧪",capsula:"💉",gotas:"💧",outro:"📦"};
+  const el = document.getElementById("medList");
+  el.innerHTML = mine.sort((a,b)=>a.hora.localeCompare(b.hora)).map(r => {
+    const st = r.tomado ? "tomado" : r.justificado ? "justificado" : getStatus(r);
+    const label = r.tomado
+      ? `<span class="chip" style="background:rgba(16,185,129,.15);color:var(--g)">✅ Tomado ${r.fotoTimestamp?`· 📸 ${new Date(r.fotoTimestamp).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}`:"" }</span>`
+      : r.justificado
+        ? `<span class="chip chip-just">⚠️ Justificado: ${r.justMotivo||""}</span>`
+        : `<span class="chip chip-pendente">⏳ Pendente</span>`;
+    return `<div class="mc ${st}" style="margin-bottom:8px">
+      <div class="mc-top">
+        <div class="mc-time-bubble"><div class="mc-time">${r.hora}</div><div class="mc-time-lbl">hora</div></div>
+        <div class="mc-body">
+          <div class="mc-name">${tipoIco[r.tipo]||"💊"} ${r.nome}</div>
+          <div class="mc-meta">${r.dose||""}</div>
+          <div class="mc-status-row">${label}</div>
+        </div>
+        ${r.foto?`<img class="mc-foto-thumb" src="${r.foto}" onclick="viewPhoto(${r.id})">`: ""}
+      </div>
+    </div>`;
+  }).join("") + `<div style="text-align:center;padding:8px 0 4px"><button class="btn btn-s btn-sm" onclick="renderDashboard()">← Ver pendentes</button></div>`;
 }
 
 function marcar(id) {
@@ -1850,6 +2094,32 @@ function excluirMed(id) {
   state.medicacoes = state.medicacoes.filter(m => m.id !== id);
   save(); renderDashboard();
   toast("Medicação removida","info");
+}
+
+// ── Justificativa ──
+function abrirJustificativa(medId) {
+  const m = state.medicacoes.find(x => x.id === medId);
+  if (!m) return;
+  document.getElementById("justMedId").value = medId;
+  document.getElementById("justMedInfo").textContent = `${m.nome} · ${m.dose||""} · ${m.hora}`;
+  document.getElementById("justObs").value = "";
+  showModal("justModal");
+}
+
+function confirmarJustificativa() {
+  const medId = parseInt(document.getElementById("justMedId").value);
+  const motivo = document.getElementById("justMotivo").value;
+  const obs    = document.getElementById("justObs").value.trim();
+  const idx = state.medicacoes.findIndex(m => m.id === medId);
+  if (idx === -1) return;
+  state.medicacoes[idx].justificado = true;
+  state.medicacoes[idx].justMotivo  = motivo;
+  state.medicacoes[idx].justObs     = obs;
+  state.medicacoes[idx].justTs      = new Date().toISOString();
+  registrarHistorico();
+  save(); syncToSheet(); renderDashboard();
+  hideModal("justModal");
+  toast(`Dose justificada: ${motivo}`, "warn");
 }
 
 // ══════════════════════════════════════════════
@@ -2162,17 +2432,101 @@ function registrarHistorico() {
   const mine = state.medicacoes.filter(m => m.data === hoje);
   const total = mine.length;
   const tomados = mine.filter(m=>m.tomado).length;
+  const justificados = mine.filter(m=>m.justificado&&!m.tomado).length;
   if(!state.historico[hoje]) state.historico[hoje] = {};
   state.historico[hoje].total = total;
   state.historico[hoje].tomados = tomados;
+  state.historico[hoje].justificados = justificados;
   state.historico[hoje].pct = total>0 ? Math.round(tomados/total*100) : 0;
+  state.historico[hoje].temJustificativa = justificados > 0;
   // Por paciente
   state.pacientes.forEach(p => {
     const pm = mine.filter(m => String(m.pacienteId)===String(p.id));
     const pt = pm.filter(m=>m.tomado).length;
+    const pj = pm.filter(m=>m.justificado&&!m.tomado).length;
     if(!state.historico[hoje].pacientes) state.historico[hoje].pacientes = {};
-    state.historico[hoje].pacientes[p.id] = {total:pm.length,tomados:pt,pct:pm.length>0?Math.round(pt/pm.length*100):0,nome:p.nome};
+    state.historico[hoje].pacientes[p.id] = {
+      total:pm.length, tomados:pt, justificados:pj,
+      pct:pm.length>0?Math.round(pt/pm.length*100):0,
+      nome:p.nome,
+      temJustificativa: pj>0
+    };
   });
+}
+
+// ══════════════════════════════════════════════
+// CALENDÁRIO HISTÓRICO
+// ══════════════════════════════════════════════
+let calAno  = new Date().getFullYear();
+let calMes  = new Date().getMonth();
+
+function calNav(dir) {
+  calMes += dir;
+  if (calMes > 11) { calMes = 0;  calAno++; }
+  if (calMes < 0)  { calMes = 11; calAno--; }
+  buildCalendar();
+}
+
+function buildCalendar() {
+  const title  = document.getElementById("calTitle");
+  const grid   = document.getElementById("calGrid");
+  if (!title || !grid) return;
+
+  const nomesMes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  title.textContent = `${nomesMes[calMes]} ${calAno}`;
+
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+
+  // Dias da semana (começa domingo)
+  const dows = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  let html = dows.map(d => `<div class="cal-dow">${d}</div>`).join("");
+
+  // Primeiro dia do mês
+  const primeiroDia = new Date(calAno, calMes, 1).getDay();
+  for (let i = 0; i < primeiroDia; i++) html += `<div class="cal-day empty"></div>`;
+
+  const diasNoMes = new Date(calAno, calMes+1, 0).getDate();
+
+  for (let dia = 1; dia <= diasNoMes; dia++) {
+    const d = new Date(calAno, calMes, dia);
+    d.setHours(0,0,0,0);
+    const key = d.toDateString();
+    const isHoje = d.getTime() === hoje.getTime();
+    const isFuturo = d > hoje;
+
+    if (isFuturo) {
+      html += `<div class="cal-day futuro${isHoje?" hoje":""}"><span class="cal-num">${dia}</span></div>`;
+      continue;
+    }
+
+    const info = state.historico[key];
+    if (!info || !info.total) {
+      html += `<div class="cal-day sem-dados${isHoje?" hoje":""}" data-tip="Sem dados"><span class="cal-num">${dia}</span></div>`;
+      continue;
+    }
+
+    const pct  = info.pct || 0;
+    const just = info.temJustificativa;
+    let cls = "", icon = "", tip = `${info.tomados||0}/${info.total||0} doses · ${pct}%`;
+
+    if (just && pct < 100) {
+      cls = "justificado"; icon = "⚠️"; tip += " · justificado";
+    } else if (pct >= 100) {
+      cls = "tomado-total"; icon = "✓";
+    } else if (pct >= 50) {
+      cls = "tomado-parcial"; icon = "~";
+    } else {
+      cls = "nao-tomado"; icon = "✕";
+    }
+
+    html += `<div class="cal-day ${cls}${isHoje?" hoje":""}" data-tip="${tip}">
+      <span class="cal-num">${dia}</span>
+      <span class="cal-icon">${icon}</span>
+    </div>`;
+  }
+
+  grid.innerHTML = html;
 }
 
 function buildChart() {
@@ -2216,6 +2570,7 @@ function atualizarSelectHistorico() {
 }
 
 function renderHistorico() {
+  buildCalendar();
   atualizarSelectHistorico();
   const filtPac = document.getElementById("histPatFilter")?.value || "todos";
   const el = document.getElementById("histList");
@@ -2227,16 +2582,18 @@ function renderHistorico() {
     const info = state.historico[d];
     let pct = info.pct;
     let detalhe = `${info.tomados||0}/${info.total||0} doses`;
+    const just = info.temJustificativa;
     if(filtPac!=="todos" && info.pacientes && info.pacientes[filtPac]){
       const pp = info.pacientes[filtPac];
       pct = pp.pct; detalhe = `${pp.tomados}/${pp.total} doses`;
     }
-    const cor = pct>=100?"var(--g)":pct>=50?"var(--a)":"var(--r-c)";
+    const cor = pct>=100?"var(--g)":just?"var(--w)":pct>=50?"var(--a)":"var(--w)";
+    const icon = pct>=100?"✅":just?"⚠️":"🟠";
     return `
     <div class="hist-card">
       <div class="hist-left">
-        <div class="hist-date">${new Date(d).toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"})}</div>
-        <div class="hist-detail">${detalhe}</div>
+        <div class="hist-date">${icon} ${new Date(d).toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"})}</div>
+        <div class="hist-detail">${detalhe}${just?" · justificado":""}</div>
       </div>
       <div class="hist-pct-bar"><div class="hist-pct-fill" style="width:${pct||0}%;background:${cor}"></div></div>
       <div class="hist-pct-num" style="color:${cor}">${pct||0}%</div>
